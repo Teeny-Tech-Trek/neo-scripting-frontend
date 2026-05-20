@@ -2,6 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { Check, Loader2, ArrowDown } from "lucide-react";
 import type { BriefData } from "./pages/Home";
 import { aiFetchRaw } from "../../services/ai/aiClient";
+import { useCredits } from "../../context/CreditsContext";
+
+/** Error variant — used to switch the inline error card into "out of credits" UX. */
+type GenError = {
+  kind: "generic" | "auth" | "insufficient_credits" | "plan_gated";
+  message: string;
+};
 
 const navigateTo = (path: string, state?: unknown) => {
   window.history.pushState(state ?? {}, "", path);
@@ -78,7 +85,8 @@ export default function GeneratorForm({ brief, onDone }: Props) {
     "queued",
   ]);
   const [stepDurations, setStepDurations] = useState<number[]>(STEPS.map(() => 0));
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<GenError | null>(null);
+  const credits = useCredits();
 
   const controllerRef = useRef<AbortController | null>(null);
   const keepAliveRef = useRef(false);
@@ -164,11 +172,37 @@ export default function GeneratorForm({ brief, onDone }: Props) {
           throw new Error("AUTH_REQUIRED");
         }
 
+        // 402 (INSUFFICIENT_CREDITS) and 403 (PLAN_GATED) get special UX:
+        // the inline error card switches into a "top up" / "upgrade" call-to-action.
+        if (response.status === 402 || response.status === 403) {
+          const payload = await response.json().catch(() => null);
+          const code = (payload?.detail?.code ?? payload?.code) as string | undefined;
+          const message =
+            (payload?.detail?.message as string | undefined) ||
+            (typeof payload?.detail === "string" ? payload.detail : null) ||
+            (response.status === 402
+              ? "You're out of credits. Top up to keep generating."
+              : "This action requires a higher plan.");
+          // Bring the navbar pill in sync (server may have refunded if it
+          // pre-deducted then bailed; either way the truth is now refetched).
+          credits.refresh();
+          if (mounted) {
+            if (code === "INSUFFICIENT_CREDITS" || response.status === 402) {
+              setError({ kind: "insufficient_credits", message });
+            } else {
+              setError({ kind: "plan_gated", message });
+            }
+          }
+          return;
+        }
+
         if (!response.ok) {
           throw new Error(`Server returned ${response.status}`);
         }
 
         const data = await response.json();
+        // /generate deducted a credit on success — sync the navbar pill.
+        credits.refresh();
         // Route through /result?req=<id> so the page always fetches the full
         // detail (markdown + citations + social citations). One source of
         // truth, no diverging shapes between fresh and from-history flows.
@@ -189,11 +223,11 @@ export default function GeneratorForm({ brief, onDone }: Props) {
         if (!mounted) return;
         const e = err as Error;
         if (e.name === "AbortError") {
-          setError("Request was cancelled or timed out. Please try again.");
+          setError({ kind: "generic", message: "Request was cancelled or timed out. Please try again." });
         } else if (e.message === "AUTH_REQUIRED") {
-          setError("You're signed out. Please log in again to generate.");
+          setError({ kind: "auth", message: "You're signed out. Please log in again to generate." });
         } else {
-          setError("Generation failed. Check your inputs or try again.");
+          setError({ kind: "generic", message: "Generation failed. Check your inputs or try again." });
         }
       } finally {
         clearTimeout(timeoutId);
@@ -369,8 +403,25 @@ export default function GeneratorForm({ brief, onDone }: Props) {
             </ul>
 
             {error && (
-              <div className="mt-5 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/25 text-red-400 text-[13px]">
-                {error}
+              <div
+                className={[
+                  "mt-5 px-4 py-3 rounded-lg border text-[13px]",
+                  error.kind === "insufficient_credits" || error.kind === "plan_gated"
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
+                    : "bg-red-500/10 border-red-500/25 text-red-400",
+                ].join(" ")}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="leading-relaxed">{error.message}</p>
+                  {(error.kind === "insufficient_credits" || error.kind === "plan_gated") && (
+                    <a
+                      href="/billing"
+                      className="shrink-0 text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-100 border border-amber-400/40 transition-colors"
+                    >
+                      {error.kind === "insufficient_credits" ? "Top up credits" : "Upgrade plan"}
+                    </a>
+                  )}
+                </div>
               </div>
             )}
 

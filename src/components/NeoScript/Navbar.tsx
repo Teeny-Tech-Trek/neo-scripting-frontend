@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Coins, Infinity as InfinityIcon } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useCredits } from "../../context/CreditsContext";
 
 /* ──────────────────────────────────────────────────────────────────────
    👇 LOGO CONFIG — apni logo file `public/` folder mein daal de.
@@ -82,7 +83,8 @@ const navigateTo = (path: string) => {
 };
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const credits = useCredits();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
@@ -217,6 +219,38 @@ export default function Navbar() {
             </a>
           </div>
 
+          {/* Credits pill — only shown when authenticated */}
+          {isAuthenticated && (
+            <a
+              href="/billing"
+              title={credits.planName ? `Plan: ${credits.planName}` : "Credits"}
+              className={[
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] font-semibold transition-all duration-200",
+                "border bg-white/[0.03] hover:bg-white/[0.06]",
+                // Low-balance warning style (< 5 credits and not unlimited and loaded)
+                credits.balance !== null && !credits.unlimited && credits.balance < 5
+                  ? "border-amber-400/40 text-amber-300 hover:border-amber-400/60"
+                  : "border-violet-500/30 text-violet-200 hover:border-violet-500/55",
+              ].join(" ")}
+              aria-label="View billing and credit balance"
+            >
+              {credits.unlimited ? (
+                <InfinityIcon size={13} strokeWidth={2.5} />
+              ) : (
+                <Coins size={13} strokeWidth={2.25} />
+              )}
+              <span className="leading-none">
+                {credits.loading && credits.balance === null
+                  ? "…"
+                  : credits.balance === null
+                    ? "—"
+                    : credits.unlimited
+                      ? "Unlimited"
+                      : `${credits.balance} credits`}
+              </span>
+            </a>
+          )}
+
           <div className="hidden sm:block w-px h-5 bg-white/[0.08] mx-2" />
 
           {/* Avatar + dropdown */}
@@ -275,9 +309,11 @@ export default function Navbar() {
                   <MenuItem href="/settings">Account settings</MenuItem>
                   <MenuItem href="/billing">
                     <span>Billing</span>
-                    <span className="ml-auto text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-violet-500/15 text-violet-300 border border-violet-500/25">
-                      Pro
-                    </span>
+                    {credits.planName && (
+                      <span className="ml-auto text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-violet-500/15 text-violet-300 border border-violet-500/25">
+                        {credits.planName}
+                      </span>
+                    )}
                   </MenuItem>
                   {/* <MenuItem href="/api-keys">API keys</MenuItem> */}
                 </div>

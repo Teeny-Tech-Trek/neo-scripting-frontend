@@ -12,6 +12,7 @@ import {
   type UserPlanSnapshot,
 } from "../../../services/ai/billingService";
 import { ApiError } from "../../../services/ai/aiClient";
+import { useCredits } from "../../../context/CreditsContext";
 
 /* ════════════════════════════════════════════════════════════════════════
    BILLING PAGE — three-tier pricing wired to the central TTT billing
@@ -118,6 +119,7 @@ export default function Billing() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [purchasingId, setPurchasingId] = useState<BillingPlanOption["id"] | null>(null);
   const [flash, setFlash] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const credits = useCredits();
 
   // Don't double-fire the initial load if React StrictMode mounts twice in dev.
   const loadedRef = useRef(false);
@@ -169,7 +171,7 @@ export default function Billing() {
         name: "Neo Script",
         description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} credit bundle`,
         theme: { color: "#7c3aed" },
-        handler: async (resp) => {
+        handler: async (_resp) => {
           // Synchronous UX poll. The authoritative state flip happens on the
           // server-side webhook from TTT; this is just so the user doesn't see
           // a stale "free" plan while the webhook lands.
@@ -187,8 +189,10 @@ export default function Billing() {
             // will still credit on its own. Reassure the user.
             setFlash({ kind: "ok", msg: "Payment received. Credits will appear in a few seconds…" });
           }
-          // Refresh balance + last-purchased state.
+          // Refresh balance + last-purchased state — locally for this page,
+          // and globally so the navbar pill updates immediately.
           loadAll();
+          credits.refresh();
         },
         modal: {
           ondismiss: () => {
@@ -205,7 +209,7 @@ export default function Billing() {
     } finally {
       setPurchasingId(null);
     }
-  }, [loadAll, razorpayKey]);
+  }, [loadAll, razorpayKey, credits]);
 
   // ─── Compose card rows. Iterate in canonical order even if API order differs. ─
   const orderedPlans = useMemo(() => {
