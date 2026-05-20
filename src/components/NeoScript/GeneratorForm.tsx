@@ -135,7 +135,11 @@ export default function GeneratorForm({ brief, onDone }: Props) {
 
     // API call (preserved from original)
     sessionStorage.removeItem("neo_script_last_result");
-    const timeoutId = setTimeout(() => ac.abort(), 120_000);
+    // 4-minute ceiling. The full pipeline (5 LLM agents + citation pass) can
+    // reliably run 90-180s on busy days; 120s was clipping legitimate runs.
+    // Even when we abort, the backend keeps going and saves the result —
+    // user can find it in /history. The abort message tells them so.
+    const timeoutId = setTimeout(() => ac.abort(), 240_000);
 
     (async () => {
       try {
@@ -223,7 +227,12 @@ export default function GeneratorForm({ brief, onDone }: Props) {
         if (!mounted) return;
         const e = err as Error;
         if (e.name === "AbortError") {
-          setError({ kind: "generic", message: "Request was cancelled or timed out. Please try again." });
+          setError({
+            kind: "generic",
+            message:
+              "This is taking longer than expected — but your generation is likely still running on the server. " +
+              "Check History in a minute, the finished post should appear there.",
+          });
         } else if (e.message === "AUTH_REQUIRED") {
           setError({ kind: "auth", message: "You're signed out. Please log in again to generate." });
         } else {
