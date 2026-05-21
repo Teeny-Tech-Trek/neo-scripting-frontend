@@ -45,7 +45,7 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
           {/* ─── LEFT: brand + copyright + link ─── */}
           <div className="flex items-center gap-3">
-            <span className="relative flex items-center justify-center w-6 h-6">
+            <span className="relative flex items-center justify-center w-16 h-16">
               <span
                 aria-hidden="true"
                 className="absolute inset-0 rounded-full bg-violet-500/20 blur-md"
@@ -55,7 +55,7 @@ export default function Footer() {
                   src={LOGO_SRC}
                   alt="Neo Script"
                   onError={() => setLogoFailed(true)}
-                  className="img-bounce relative w-6 h-6 rounded-md object-contain"
+                  className="img-bounce relative w-16 h-16 rounded-md object-contain"
                   draggable={false}
                 />
               ) : (

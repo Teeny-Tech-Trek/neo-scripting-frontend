@@ -47,7 +47,7 @@ const Navbar = () => {
             ⚠️ FIX: Use proper flex with flex-1 on nav links instead of absolute centering.
             Pehle absolute positioning use ki thi jisse Blog/Sign In overlap ho rahe the.
           */}
-          <div className="flex items-center justify-between h-20 gap-6">
+          <div className="flex items-center justify-between h-24 gap-6">
             {/* ════════════ LOGO ════════════ */}
             <motion.a
               href="/"
@@ -59,12 +59,12 @@ const Navbar = () => {
               <motion.div
                 whileHover={{ scale: 1.05, rotate: -3 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative w-11 h-11 flex items-center justify-center cursor-pointer flex-shrink-0"
+                className="relative w-20 h-20 flex items-center justify-center cursor-pointer flex-shrink-0"
               >
                 <img
                   src="/logo.png"
                   alt="Neo Scripting"
-                  className="w-11 h-11 object-contain"
+                  className="w-20 h-20 object-contain"
                   draggable={false}
                 />
               </motion.div>

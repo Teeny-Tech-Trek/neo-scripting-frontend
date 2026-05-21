@@ -167,11 +167,11 @@ const Footer = () => {
           <div className="lg:col-span-5 sm:col-span-2 flex flex-col gap-5">
             {/* Logo + name */}
             <a href="/" className="flex items-center gap-3 w-fit">
-              <div className="w-11 h-11 flex items-center justify-center flex-shrink-0">
+              <div className="w-24 h-24 flex items-center justify-center flex-shrink-0">
                 <img
                   src="/logo.png"
                   alt="Neo Scripting"
-                  className="w-11 h-11 object-contain"
+                  className="w-24 h-24 object-contain"
                   draggable={false}
                 />
               </div>

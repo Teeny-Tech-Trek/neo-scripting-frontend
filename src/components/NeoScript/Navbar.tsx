@@ -120,7 +120,7 @@ export default function Navbar() {
       style={scrolled ? { backgroundColor: "rgba(10,10,12,0.78)" } : {}}
     >
       {/* Full-width nav with edge padding (no centered max-width) */}
-      <nav className="px-6 sm:px-10 lg:px-12 h-[72px] flex items-center justify-between">
+      <nav className="px-6 sm:px-10 lg:px-12 h-[88px] flex items-center justify-between">
         {/* ─── BRAND + LOGO ──────────────────────────────────────────── */}
         <a
           href="/home"
@@ -135,13 +135,13 @@ export default function Navbar() {
               className="absolute inset-0 rounded-full bg-violet-500/25 blur-lg group-hover:bg-violet-500/45 transition-all duration-300"
             />
 
-            <span className="relative w-9 h-9 flex items-center justify-center">
+            <span className="relative w-20 h-20 flex items-center justify-center">
               {!logoFailed ? (
                 <img
                   src={LOGO_SRC}
                   alt={`${BRAND_NAME} logo`}
                   onError={() => setLogoFailed(true)}
-                  className="img-bounce w-9 h-9 rounded-md object-contain"
+                  className="img-bounce w-20 h-20 rounded-md object-contain"
                   draggable={false}
                 />
               ) : (
