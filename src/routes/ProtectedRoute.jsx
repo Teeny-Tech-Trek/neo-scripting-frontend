@@ -2,14 +2,32 @@ import { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { navigateTo } from "../services/auth/authHelpers";
 
+/**
+ * Gate for app pages.
+ *
+ *   not logged in            →  /login
+ *   logged in, unverified    →  /verify-email   (shows the "resend / open the link" UX)
+ *   logged in, verified      →  render children
+ *
+ * The verified check is deliberately stricter than the server's. The Python
+ * backend gates /generate and other credit-burning endpoints with
+ * `require_verified_email`, but the rest of the app would still render — we
+ * want the UI to refuse to let an unverified user past the door at all.
+ */
 const ProtectedRoute = ({ children, redirectTo = "/login" }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+  const isVerified = !!user?.isEmailVerified;
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (loading) return;
+    if (!isAuthenticated) {
       navigateTo(redirectTo);
+      return;
     }
-  }, [loading, isAuthenticated, redirectTo]);
+    if (!isVerified) {
+      navigateTo("/verify-email");
+    }
+  }, [loading, isAuthenticated, isVerified, redirectTo]);
 
   if (loading) {
     return (
@@ -30,7 +48,7 @@ const ProtectedRoute = ({ children, redirectTo = "/login" }) => {
     );
   }
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || !isVerified) return null;
 
   return <>{children}</>;
 };

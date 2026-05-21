@@ -13,6 +13,10 @@ const VerifyEmailLogic = () => {
   const [resendStatus, setResendStatus] = useState<"idle" | "success" | "error">("idle");
   const [resendMessage, setResendMessage] = useState("");
 
+  // Tracks the Continue button. Prevents double-clicks and lets us re-refresh
+  // user state before navigating, so ProtectedRoute sees isEmailVerified=true.
+  const [isContinuing, setIsContinuing] = useState(false);
+
   // React 18 StrictMode mounts effects twice in dev; one-shot guard so we
   // don't burn the token by hitting /verify-email twice.
   const ranRef = useRef(false);
@@ -36,14 +40,26 @@ const VerifyEmailLogic = () => {
 
     (async () => {
       const result = await verifyEmail(token);
-      if (result.ok) {
-        setStatus("success");
-        setMessage(result.message || "Your email has been verified.");
-        if (isAuthenticated) refreshUser();
-      } else {
+      if (!result.ok) {
         setStatus("error");
         setMessage(result.error?.message || "We couldn't verify this link. It may have expired.");
+        return;
       }
+
+      // Backend has flipped isEmailVerified=true in the DB. We MUST await the
+      // user refresh here so ProtectedRoute sees the new value when the user
+      // clicks Continue — otherwise they bounce right back to /verify-email.
+      if (isAuthenticated) {
+        try {
+          await refreshUser();
+        } catch {
+          // Non-fatal — backend state is correct, we just couldn't sync the
+          // client-side cache. The "Continue" handler will retry below.
+        }
+      }
+
+      setStatus("success");
+      setMessage(result.message || "Your email has been verified.");
     })();
   }, [isAuthenticated, refreshUser]);
 
@@ -62,11 +78,30 @@ const VerifyEmailLogic = () => {
     }
   };
 
+  // Defensive re-refresh + navigate. If the initial refreshUser raced or
+  // failed, this catches up before ProtectedRoute reads isEmailVerified.
+  // If the user isn't authenticated at all (clicked link in a different
+  // browser / incognito), go to /login so they can sign in fresh.
+  const handleContinue = async () => {
+    if (isContinuing) return;
+    setIsContinuing(true);
+    if (!isAuthenticated) {
+      navigateTo("/login");
+      return;
+    }
+    try {
+      await refreshUser();
+    } catch {
+      // Non-fatal; ProtectedRoute will retry the gate on /home.
+    }
+    navigateTo("/home");
+  };
+
   return (
     <VerifyEmail
       status={status}
       message={message}
-      onGoHome={() => navigateTo(isAuthenticated ? "/home" : "/login")}
+      onGoHome={handleContinue}
       onGoLogin={() => navigateTo("/login")}
       canResend={isAuthenticated && (status === "missing" || status === "error")}
       isResending={isResending}

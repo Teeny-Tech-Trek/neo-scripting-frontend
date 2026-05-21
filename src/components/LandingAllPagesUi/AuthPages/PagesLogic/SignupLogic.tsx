@@ -70,7 +70,11 @@ const SignupLogic = () => {
 
     if (result.ok) {
       setSubmitStatus("success");
-      setTimeout(() => navigateTo("/home"), 800);
+      // New signups go to the verify-email screen with the "open the link in
+      // your inbox / resend" UX. ProtectedRoute would bounce them there anyway
+      // (isEmailVerified=false), but doing it here avoids the flash through /home.
+      // Google sign-ins skip this — Google has already verified their email.
+      setTimeout(() => navigateTo("/verify-email"), 800);
     } else {
       setSubmitStatus("error");
       setErrorMessage(result.error?.message || "Signup failed. Please try again.");
@@ -87,7 +91,11 @@ const SignupLogic = () => {
       if (result.ok) {
         applyAuthResult(result);
         setSubmitStatus("success");
-        setTimeout(() => navigateTo("/home"), 600);
+        // Google has verified this user's email; if for any reason the server
+        // returned isEmailVerified=false, ProtectedRoute will route them to
+        // /verify-email automatically. Otherwise straight to /home.
+        const target = result.user?.isEmailVerified ? "/home" : "/verify-email";
+        setTimeout(() => navigateTo(target), 600);
       } else {
         setSubmitStatus("error");
         setErrorMessage(result.error?.message || "Google sign-in failed.");

@@ -15,6 +15,7 @@ import NeoResult from "./components/NeoScript/pages/Result";
 import NeoHistory from "./components/NeoScript/pages/History";
 import NeoDocuments from "./components/NeoScript/pages/Documents";
 import NeoBilling from "./components/NeoScript/pages/Billing";
+import NeoDocs from "./components/NeoScript/pages/Docs";
 import NewBriefDashboard from "./components/LandingAllPagesUi/Livedemopreview";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -126,6 +127,12 @@ const routes: RouteConfig[] = [
         <NeoBilling />
       </ProtectedRoute>
     ),
+  },
+  {
+    // Docs is intentionally PUBLIC — no ProtectedRoute. Anyone (including
+    // anonymous landing-page visitors) should be able to read the docs.
+    path: "/docs",
+    page: <NeoDocs />,
   },
 ];
 

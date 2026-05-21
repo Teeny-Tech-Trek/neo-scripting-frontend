@@ -35,7 +35,10 @@ const LoginLogic = () => {
     setIsSubmitting(false);
 
     if (result.ok) {
-      navigateTo("/home");
+      // Unverified users land on /verify-email so they see the resend UX
+      // instead of bouncing through /home → /verify-email via ProtectedRoute.
+      const target = result.user?.isEmailVerified ? "/home" : "/verify-email";
+      navigateTo(target);
     } else {
       setErrorMessage(result.error?.message || "Login failed. Please try again.");
     }
@@ -49,7 +52,8 @@ const LoginLogic = () => {
       setIsSubmitting(false);
       if (result.ok) {
         applyAuthResult(result);
-        navigateTo("/home");
+        const target = result.user?.isEmailVerified ? "/home" : "/verify-email";
+        navigateTo(target);
       } else {
         setErrorMessage(result.error?.message || "Google sign-in failed.");
       }
