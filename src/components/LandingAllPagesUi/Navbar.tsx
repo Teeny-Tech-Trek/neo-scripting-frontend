@@ -16,10 +16,9 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: "Product", href: "#product" },
+    { name: "Docs", href: "/docs" },
     { name: "Agents", href: "#agents" },
     { name: "Demo", href: "#demo" },
-    
   ];
 
   return (

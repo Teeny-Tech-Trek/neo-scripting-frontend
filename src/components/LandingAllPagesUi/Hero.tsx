@@ -238,7 +238,7 @@ const HeroSection = () => {
 
             <motion.div className="flex flex-col sm:flex-row gap-3"
               initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.45 }}>
-              <motion.a href="/start"
+              <motion.a href="/login"
                 whileHover={{ scale:1.03, boxShadow:"0 0 50px rgba(59,130,246,0.55)" }} whileTap={{ scale:0.97 }}
                 className="group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full font-semibold text-[15px] text-white overflow-hidden"
                 style={{ background:"linear-gradient(90deg,#22d3ee 0%,#3b82f6 50%,#a855f7 100%)",
@@ -249,7 +249,7 @@ const HeroSection = () => {
                   style={{ background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)",
                     animation:"btn-shine 2.5s ease-in-out infinite" }}/>
               </motion.a>
-              <motion.a href="#pipeline"
+              <motion.a href="#demo"
                 whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                 className="inline-flex items-center justify-center gap-3 px-7 py-4 rounded-full font-medium text-[15px] text-white"
                 style={{ border:"1px solid rgba(255,255,255,0.12)", background:"rgba(15,15,30,0.5)", backdropFilter:"blur(10px)" }}>

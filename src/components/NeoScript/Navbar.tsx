@@ -159,26 +159,8 @@ export default function Navbar() {
 
         {/* ─── RIGHT NAV ─────────────────────────────────────────────── */}
         <div className="flex items-center gap-1.5">
-          <div className="hidden sm:flex items-center gap-1">
-            <a
-              href="/history"
-              className="px-3.5 py-2 text-[13px] font-medium text-white/55 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]"
-            >
-              History
-            </a>
-            <a
-              href="/documents"
-              className="px-3.5 py-2 text-[13px] font-medium text-white/55 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]"
-            >
-              Documents
-            </a>
-            <a
-              href="/docs"
-              className="px-3.5 py-2 text-[13px] font-medium text-white/55 hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]"
-            >
-              Docs
-            </a>
-          </div>
+          {/* Nav links removed — History + Documents now live in the
+              home page's left sidebar with See-all CTAs. */}
 
           {/* Credits pill — only shown when authenticated */}
           {isAuthenticated && (

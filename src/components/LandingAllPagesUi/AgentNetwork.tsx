@@ -29,7 +29,7 @@ const AgentNetwork = () => {
     <section
       ref={sectionRef}
       id="agents"
-      className="relative py-20 lg:py-24 overflow-hidden"
+      className="relative pt-20 pb-8 lg:pt-24 lg:pb-10 overflow-hidden"
       style={{ background: "#05050f" }}
     >
       <style>{`
@@ -201,6 +201,44 @@ const AgentNetwork = () => {
   }}
 />
         </motion.div>
+
+        {/* ════════════ BRIDGE TAGLINE → live preview below ════════════ */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={isImageInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+          transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-6 sm:mt-8 text-center px-6"
+        >
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] px-2.5 py-1 rounded-full"
+            style={{
+              background: "rgba(124,58,237,0.12)",
+              border: "1px solid rgba(124,58,237,0.28)",
+              color: "#c4b5fd",
+            }}>
+            <span className="w-1 h-1 rounded-full bg-violet-300"
+              style={{ animation: "ag-pulse 2.5s ease-in-out infinite" }}/>
+            See it in action
+          </span>
+          <h3 className="mt-4 text-[22px] sm:text-[30px] font-extrabold tracking-tight text-white leading-[1.15] max-w-[760px] mx-auto">
+            This isn't a mockup.{" "}
+            <span
+              style={{
+                background:
+                  "linear-gradient(90deg, #a78bfa 0%, #c4b5fd 50%, #f0abfc 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              It's the actual interface.
+            </span>
+          </h3>
+          <p className="mt-3 text-[14px] sm:text-[15px] leading-relaxed max-w-[640px] mx-auto"
+            style={{ color: "rgba(255,255,255,0.55)" }}>
+            Drop a topic, pick your tone, watch ten agents go to work, or skip the dashboard entirely and run it from Claude, Cursor, or any MCP-aware client.
+          </p>
+        </motion.div>
+
       </div>
     </section>
   );

@@ -11,7 +11,11 @@ import {
   listGenerations,
   type GenerationHistoryItem,
 } from "../../services/ai/generationsService";
-import { uploadDocument } from "../../services/ai/documentsService";
+import {
+  listBrands,
+  uploadDocument,
+  type UserBrandSummary,
+} from "../../services/ai/documentsService";
 
 const SOCIALS: { label: string; value: SocialPlatform }[] = [
   { label: "LinkedIn", value: "linkedin" },
@@ -303,10 +307,40 @@ function BriefForm({ onGenerate }: { onGenerate: (d: BriefData) => void }) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 ">
+    <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 ">
+      {/* LEFT SIDEBAR — Brands + Recent + MCP. Rendered first so it sits on
+          the left at lg+ widths; on mobile it stacks above the form. */}
+      <aside className="flex flex-col gap-5 order-2 lg:order-1">
+        <BrandsSidebar />
+        <RecentSidebar />
+
+        <div
+          className="rounded-2xl border border-white/[0.06] p-5"
+          style={{ background: "rgba(255,255,255,0.015)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+            </span>
+            <h3 className="text-[14px] font-semibold text-white">
+              MCP server live
+            </h3>
+          </div>
+          <p className="text-[12.5px] text-white/50 leading-relaxed mb-3">
+            Use Neo Script from Claude, Cursor or any MCP client.
+          </p>
+          <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/40 px-2.5 py-1.5">
+            <code className="flex-1 font-mono text-[11.5px] text-violet-300 truncate">
+              {MCP_URL_SHORT}
+            </code>
+          </div>
+        </div>
+      </aside>
+
       {/* MAIN CARD */}
       <div
-        className="rounded-2xl border border-white/[0.06] p-7 shadow-[0_1px_0_rgba(255,255,255,0.02)_inset]"
+        className="rounded-2xl border border-white/[0.06] p-7 shadow-[0_1px_0_rgba(255,255,255,0.02)_inset] order-1 lg:order-2"
         style={{ background: "rgba(255,255,255,0.015)" }}
       >
         <div className="flex items-start justify-between mb-6">
@@ -691,33 +725,6 @@ function BriefForm({ onGenerate }: { onGenerate: (d: BriefData) => void }) {
         </div>
       </div>
 
-      {/* SIDEBAR */}
-      <aside className="flex flex-col gap-5">
-        <RecentSidebar />
-
-        <div
-          className="rounded-2xl border border-white/[0.06] p-5"
-          style={{ background: "rgba(255,255,255,0.015)" }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-            </span>
-            <h3 className="text-[15px] font-semibold text-white">
-              MCP server live
-            </h3>
-          </div>
-          <p className="text-[13px] text-white/50 leading-relaxed mb-4">
-            Use Neo Script from Claude, Cursor or any MCP client.
-          </p>
-          <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/40 px-3 py-2">
-            <code className="flex-1 font-mono text-[12px] text-violet-300 truncate">
-              {MCP_URL_SHORT}
-            </code>
-          </div>
-        </div>
-      </aside>
     </div>
   );
 }
@@ -758,14 +765,20 @@ function RecentSidebar() {
       className="rounded-2xl border border-white/[0.06] p-5"
       style={{ background: "rgba(255,255,255,0.015)" }}
     >
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-[15px] font-semibold text-white">Recent</h3>
+      <div className="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          onClick={() => navigateTo("/history")}
+          className="text-[14px] font-semibold text-white hover:text-violet-200 transition-colors"
+        >
+          History
+        </button>
         <button
           type="button"
           onClick={() => navigateTo("/history")}
           className="text-[12px] text-white/45 hover:text-white transition-colors inline-flex items-center gap-0.5"
         >
-          See more <ArrowRight size={11} />
+          See all <ArrowRight size={11} />
         </button>
       </div>
 
@@ -822,6 +835,101 @@ function RecentSidebar() {
               </li>
             );
           })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BRANDS SIDEBAR — last 4 brands the user uploaded docs for, clickable.
+   We can't show individual documents without picking a brand, so the
+   sidebar lists brands (each is one row → /documents filtered to it).
+   The "See all" button goes to /documents with no filter.
+   ═══════════════════════════════════════════════════════════════════════ */
+function BrandsSidebar() {
+  const [brands, setBrands]   = useState<UserBrandSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await listBrands();
+        // Sort by most-recently-ingested first, take top 4.
+        const sorted = [...rows].sort((a, b) => {
+          const ta = a.last_ingested_at ? Date.parse(a.last_ingested_at) : 0;
+          const tb = b.last_ingested_at ? Date.parse(b.last_ingested_at) : 0;
+          return tb - ta;
+        });
+        if (!cancelled) setBrands(sorted.slice(0, 4));
+      } catch (err) {
+        if (!cancelled) setError((err as Error).message || "Couldn't load");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div
+      className="rounded-2xl border border-white/[0.06] p-5"
+      style={{ background: "rgba(255,255,255,0.015)" }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          onClick={() => navigateTo("/documents")}
+          className="text-[14px] font-semibold text-white hover:text-violet-200 transition-colors"
+        >
+          Documents
+        </button>
+        <button
+          type="button"
+          onClick={() => navigateTo("/documents")}
+          className="text-[12px] text-white/45 hover:text-white transition-colors inline-flex items-center gap-0.5"
+        >
+          See all <ArrowRight size={11} />
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="py-5 flex items-center justify-center text-white/40 text-[12.5px]">
+          <Loader2 size={13} className="animate-spin mr-2" /> Loading…
+        </div>
+      ) : error ? (
+        <p className="text-[12px] text-red-400/80">{error}</p>
+      ) : brands.length === 0 ? (
+        <div className="py-4 flex flex-col items-center text-white/40 text-[12px] text-center">
+          <FileText size={18} className="mb-2 text-white/25" />
+          No brands yet. Upload a doc to get started.
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {brands.map((b) => (
+            <li key={b.brand_name}>
+              <button
+                type="button"
+                onClick={() => navigateTo("/documents")}
+                className="block w-full text-left group"
+              >
+                <div className="text-[13.5px] font-medium text-white/95 mb-0.5 truncate group-hover:text-violet-300 transition-colors capitalize">
+                  {b.brand_name}
+                </div>
+                <div className="text-[11.5px] text-white/40 flex items-center gap-1.5">
+                  <span>{b.doc_count} doc{b.doc_count === 1 ? "" : "s"}</span>
+                  {b.last_ingested_at && (
+                    <>
+                      <span>·</span>
+                      <span>{relativeTime(b.last_ingested_at)}</span>
+                    </>
+                  )}
+                </div>
+              </button>
+            </li>
+          ))}
         </ul>
       )}
     </div>

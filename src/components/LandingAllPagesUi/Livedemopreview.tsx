@@ -286,13 +286,14 @@ const NewBriefDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Form (hidden on mobile when "recent" tab active) */}
+          {/* Form (hidden on mobile when "recent" tab active) — only the
+              "Web app" tab. MCP tab swaps the same surface for a setup view. */}
           <AnimatePresence mode="wait">
-            {(!isMobile || mobileSection === "form") && (
+            {(!isMobile || mobileSection === "form") && activeTab === "webapp" && (
               <motion.div key="form"
-                initial={isMobile?{opacity:0,x:-20}:{}}
-                animate={isMobile?{opacity:1,x:0}:{}}
-                exit={isMobile?{opacity:0,x:-20}:{}}
+                initial={isMobile?{opacity:0,x:-20}:{opacity:0,y:8}}
+                animate={isMobile?{opacity:1,x:0}:{opacity:1,y:0}}
+                exit={isMobile?{opacity:0,x:-20}:{opacity:0,y:-8}}
                 transition={{ duration:.3 }}
                 className="flex-1 px-3 sm:px-5 lg:px-8 pb-4 lg:pb-8">
                 <Card3D disabled={isMobile} intensity={3} className="rounded-2xl overflow-hidden" style={cardStyle}>
@@ -500,6 +501,140 @@ const NewBriefDashboard: React.FC = () => {
                       </motion.button>
                       <p className="text-center text-[10.5px] sm:text-[11.5px] mt-2" style={{ color:"rgba(255,255,255,.3)" }}>
                         {isMobile ? "Tap to generate" : "⌘ + ↵ to generate"}
+                      </p>
+                    </div>
+
+                  </div>
+                </Card3D>
+              </motion.div>
+            )}
+
+            {/* MCP tab — mirrors the form's surface but shows an IDE setup view.
+                Static (illustrative), not interactive — same as the rest of the
+                landing demo. */}
+            {(!isMobile || mobileSection === "form") && activeTab === "mcp" && (
+              <motion.div key="mcp"
+                initial={isMobile?{opacity:0,x:-20}:{opacity:0,y:8}}
+                animate={isMobile?{opacity:1,x:0}:{opacity:1,y:0}}
+                exit={isMobile?{opacity:0,x:-20}:{opacity:0,y:-8}}
+                transition={{ duration:.3 }}
+                className="flex-1 px-3 sm:px-5 lg:px-8 pb-4 lg:pb-8">
+                <Card3D disabled={isMobile} intensity={3} className="rounded-2xl overflow-hidden" style={cardStyle}>
+
+                  {/* Card header */}
+                  <div className="flex items-center justify-between px-4 sm:px-6 pt-5 pb-4"
+                    style={{ borderBottom:"1px solid rgba(255,255,255,.06)" }}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-[18px] sm:text-[22px] font-extrabold text-white tracking-tight">
+                        Connect to your IDE
+                      </h2>
+                      <motion.div animate={{ opacity:[.6,1,.6] }} transition={{ duration:2, repeat:Infinity }}
+                        className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                        style={{ background:"rgba(34,197,94,.14)", border:"1px solid rgba(34,197,94,.32)", color:"#86efac" }}>
+                        <span className="w-1.5 h-1.5 rounded-full"
+                          style={{ background:"#22c55e", boxShadow:"0 0 6px rgba(34,197,94,.7)", animation:"nb-status 2s ease-in-out infinite" }}/>
+                        MCP server live
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5">
+
+                    {/* Client picker */}
+                    <div>
+                      <label className="block text-[11px] sm:text-[12px] font-bold text-white/70 mb-2 uppercase tracking-widest">
+                        Pick your client
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {["Claude Desktop","Cursor","Windsurf"].map((c,i) => (
+                          <motion.div key={c}
+                            initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
+                            transition={{ delay:.05+i*.06 }}
+                            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[12px] sm:text-[13px] font-semibold"
+                            style={{
+                              background: i===0?"linear-gradient(135deg,#6d28d9,#7c3aed)":"rgba(255,255,255,.04)",
+                              border: i===0?"1px solid rgba(124,58,237,.6)":"1px solid rgba(255,255,255,.10)",
+                              color: i===0?"white":"rgba(255,255,255,.6)",
+                              boxShadow: i===0?"0 0 18px rgba(124,58,237,.45)":"none",
+                            }}>
+                            {c}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Config snippet */}
+                    <div>
+                      <label className="block text-[11px] sm:text-[12px] font-bold text-white/70 mb-2 uppercase tracking-widest">
+                        Paste into your config
+                      </label>
+                      <div className="relative rounded-xl overflow-hidden"
+                        style={{ background:"rgba(0,0,0,.45)", border:"1px solid rgba(99,102,241,.25)" }}>
+                        <pre className="text-[11px] sm:text-[12px] leading-relaxed text-white/85 p-3 sm:p-4 overflow-x-auto font-mono">
+{`{
+  "mcpServers": {
+    "neo-script": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote",
+               "https://${MCP_URL}",
+               "--header",
+               "Authorization: Bearer neo_xxxx"]
+    }
+  }
+}`}
+                        </pre>
+                        <motion.button whileTap={{ scale:.92 }}
+                          onClick={() => { navigator.clipboard.writeText(`https://${MCP_URL}`); setCopied(true); setTimeout(()=>setCopied(false),1500); }}
+                          className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 rounded-md text-[10.5px] font-semibold"
+                          style={{ background:"rgba(99,102,241,.20)", border:"1px solid rgba(99,102,241,.4)", color:"#c4b5fd" }}>
+                          {copied
+                            ? <><Check className="w-3 h-3" strokeWidth={3}/> Copied</>
+                            : <><Copy className="w-3 h-3" strokeWidth={2}/> Copy</>}
+                        </motion.button>
+                      </div>
+                    </div>
+
+                    {/* Example prompts */}
+                    <div>
+                      <label className="block text-[11px] sm:text-[12px] font-bold text-white/70 mb-2 uppercase tracking-widest">
+                        Then ask your assistant
+                      </label>
+                      <div className="space-y-2">
+                        {[
+                          "Generate a blog about MCP servers for B2B SaaS using Neo Script",
+                          "List my Neo Script reference docs for brand \"acme\"",
+                          "Use neo-script to write a LinkedIn post about agentic AI",
+                        ].map((q,i) => (
+                          <motion.div key={i}
+                            initial={{ opacity:0, x:-6 }} animate={{ opacity:1, x:0 }}
+                            transition={{ delay:.15+i*.07 }}
+                            className="flex items-start gap-2 px-3 py-2 rounded-lg text-[12px] sm:text-[13px]"
+                            style={{ background:"rgba(255,255,255,.03)", border:"1px solid rgba(255,255,255,.06)", color:"rgba(255,255,255,.75)" }}>
+                            <ChevronRight className="w-3.5 h-3.5 mt-[2px] flex-shrink-0 text-violet-300" strokeWidth={2.5}/>
+                            <span className="italic">"{q}"</span>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Footer CTA */}
+                    <div className="pt-1">
+                      <motion.div
+                        whileHover={{ scale:1.01, boxShadow:"0 0 50px rgba(99,102,241,.55)" }}
+                        whileTap={{ scale:.985 }}
+                        className="relative w-full rounded-xl font-bold text-[14px] sm:text-[15px] text-white overflow-hidden flex items-center justify-center gap-2.5"
+                        style={{ height:isMobile?52:56,
+                          background:"linear-gradient(90deg,#6d28d9 0%,#7c3aed 50%,#8b5cf6 100%)",
+                          boxShadow:"0 8px 30px rgba(99,102,241,.50),0 0 20px rgba(124,58,237,.35)" }}>
+                        <Sparkles className="w-4 h-4" fill="white" strokeWidth={0}/>
+                        Mint your API key
+                        <ArrowRight className="w-4 h-4" strokeWidth={2.5}/>
+                        <span className="pointer-events-none absolute top-0 bottom-0 w-1/3"
+                          style={{ background:"linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent)",
+                            animation:"nb-shine 2.2s ease-in-out infinite" }}/>
+                      </motion.div>
+                      <p className="text-center text-[10.5px] sm:text-[11.5px] mt-2" style={{ color:"rgba(255,255,255,.3)" }}>
+                        Sign in → /home → MCP tab → Create API key
                       </p>
                     </div>
 
