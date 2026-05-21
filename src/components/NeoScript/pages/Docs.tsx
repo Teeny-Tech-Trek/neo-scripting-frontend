@@ -4,7 +4,9 @@ import {
   Sparkles, BookOpen, Cpu, Zap, ShieldCheck, KeyRound, Database,
   Workflow, FileText, CreditCard, Plug, ChevronRight,
 } from "lucide-react";
-import Navbar from "../Navbar";
+// Docs is a public page — use the landing-page navbar so anonymous visitors
+// see the Sign In / Get Started CTAs, not the logged-in avatar dropdown.
+import Navbar from "../../LandingAllPagesUi/Navbar";
 import Footer from "../Footer";
 
 /* ════════════════════════════════════════════════════════════════════════

@@ -15,10 +15,13 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Use absolute paths so these work from /docs (or anywhere else) — when
+  // the user is on /, the router treats `/#agents` as a same-page hash and
+  // smooth-scrolls. From /docs it navigates to / and scrolls after mount.
   const navLinks = [
     { name: "Docs", href: "/docs" },
-    { name: "Agents", href: "#agents" },
-    { name: "Demo", href: "#demo" },
+    { name: "Agents", href: "/#agents" },
+    { name: "Demo", href: "/#demo" },
   ];
 
   return (

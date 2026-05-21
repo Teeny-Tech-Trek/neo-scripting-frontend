@@ -176,12 +176,32 @@ export default function Routing() {
       if (!isSameOrigin || !isKnownRoute) return;
 
       event.preventDefault();
-      window.history.pushState({}, "", url.pathname + url.search);
+      // Preserve the hash on cross-page navigation (e.g. clicking /#agents
+      // from /docs) so the next effect can scroll to it after mount.
+      window.history.pushState({}, "", url.pathname + url.search + url.hash);
       updatePage();
+
+      // If the target path had a hash, scroll to it after the new page renders.
+      // setTimeout gives React a tick to mount the new tree before we query.
+      if (url.hash) {
+        setTimeout(() => {
+          const el = document.querySelector(url.hash);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 60);
+      }
     };
 
     window.addEventListener("popstate", updatePage);
     document.addEventListener("click", handleClick);
+
+    // First-load scroll: if the URL has a hash (e.g. someone shares
+    // https://neoscript/#agents) scroll to it once the DOM has mounted.
+    if (window.location.hash) {
+      setTimeout(() => {
+        const el = document.querySelector(window.location.hash);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 120);
+    }
 
     return () => {
       window.removeEventListener("popstate", updatePage);

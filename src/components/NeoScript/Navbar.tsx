@@ -249,7 +249,6 @@ export default function Navbar() {
                   )}
                 </div>
                 <div className="py-1">
-                  <MenuItem href="/settings">Account settings</MenuItem>
                   <MenuItem href="/billing">
                     <span>Billing</span>
                     {credits.planName && (
