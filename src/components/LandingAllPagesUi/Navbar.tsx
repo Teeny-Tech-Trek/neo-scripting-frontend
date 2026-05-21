@@ -59,17 +59,14 @@ const Navbar = () => {
               <motion.div
                 whileHover={{ scale: 1.05, rotate: -3 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer flex-shrink-0"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #0a1f3d 0%, #102a4e 50%, #0a1f3d 100%)",
-                  border: "1.5px solid rgba(34,211,238,0.4)",
-                  boxShadow:
-                    "0 0 18px rgba(34,211,238,0.35), inset 0 0 10px rgba(34,211,238,0.15)",
-                }}
+                className="relative w-11 h-11 flex items-center justify-center cursor-pointer flex-shrink-0"
               >
-                {/* Replace with: <img src={logoImg} ... /> */}
-                <TwinSilhouettes />
+                <img
+                  src="/logo.png"
+                  alt="Neo Scripting"
+                  className="w-11 h-11 object-contain"
+                  draggable={false}
+                />
               </motion.div>
 
               <h1 className="nav-font font-extrabold text-2xl tracking-tight leading-none whitespace-nowrap font-syne-bold">
@@ -243,31 +240,5 @@ const Navbar = () => {
     </>
   );
 };
-
-const TwinSilhouettes = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 32 32"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="relative z-10"
-  >
-    <defs>
-      <linearGradient id="twin-grad-nav" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#22d3ee" />
-        <stop offset="100%" stopColor="#60a5fa" />
-      </linearGradient>
-    </defs>
-    <path
-      d="M11.5 8.5 a2.5 2.5 0 0 1 0 5 a2.5 2.5 0 0 1 0 -5 Z M7 22 c0 -3 2 -5.5 4.5 -5.5 c1 0 1.8 .4 2.5 1 v8 H7 v-3.5 Z"
-      fill="url(#twin-grad-nav)"
-    />
-    <path
-      d="M20.5 8.5 a2.5 2.5 0 0 0 0 5 a2.5 2.5 0 0 0 0 -5 Z M25 22 c0 -3 -2 -5.5 -4.5 -5.5 c-1 0 -1.8 .4 -2.5 1 v8 H25 v-3.5 Z"
-      fill="url(#twin-grad-nav)"
-    />
-  </svg>
-);
 
 export default Navbar;
