@@ -249,7 +249,7 @@ const HeroSection = () => {
                   style={{ background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)",
                     animation:"btn-shine 2.5s ease-in-out infinite" }}/>
               </motion.a>
-              <motion.a href="#demo"
+              <motion.a href="#how-it-works"
                 whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
                 className="inline-flex items-center justify-center gap-3 px-7 py-4 rounded-full font-medium text-[15px] text-white"
                 style={{ border:"1px solid rgba(255,255,255,0.12)", background:"rgba(15,15,30,0.5)", backdropFilter:"blur(10px)" }}>

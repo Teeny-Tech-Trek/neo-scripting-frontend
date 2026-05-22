@@ -1,4 +1,4 @@
-const cubeImg = "/LoginImage.png";
+const cubeImg = "/signup.png";
 
 import type { ChangeEvent, FormEvent } from "react";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, User, Loader2, CheckCircle2 } from "lucide-react";
@@ -105,7 +105,7 @@ const Signup = ({
         ))}
       </div>
 
-      <main className="flex-1 grid lg:grid-cols-2 lg:gap-10 items-start container mx-auto px-6 sm:px-10 lg:px-10 pt-24 lg:pt-28 pb-12 relative z-10">
+      <main className="flex-1 grid lg:grid-cols-2 lg:gap-10 items-stretch container mx-auto px-6 sm:px-10 lg:px-10 pt-24 lg:pt-28 pb-12 relative z-10">
         <div className="hidden lg:flex flex-col gap-7 max-w-xl">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -113,7 +113,7 @@ const Signup = ({
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-white"
             style={{
-              fontSize: "clamp(2.5rem, 4.5vw, 3.75rem)",
+              fontSize: "clamp(2.5rem, 4.5vw, 3.4rem)",
               fontWeight: 900,
               lineHeight: 1.05,
             }}
@@ -148,7 +148,7 @@ const Signup = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="relative w-full h-[380px] mt-2"
+            className="relative w-full flex-1  mt-2"
           >
             <div
               className="absolute pointer-events-none"
@@ -164,9 +164,9 @@ const Signup = ({
             />
             <img
               src={cubeImg}
-              alt="3D Cube"
+              alt="Neo Script features"
               draggable={false}
-              className="absolute left-1/2 top-1/2 w-[520px] h-[420px] object-contain select-none pointer-events-none"
+              className="absolute left-1/2 top-1/2 w-[2000px] h-auto select-none pointer-events-none "
               style={{
                 filter: "drop-shadow(0 0 30px rgba(168,85,247,0.5))",
                 animation: "su-float 6s ease-in-out infinite",
