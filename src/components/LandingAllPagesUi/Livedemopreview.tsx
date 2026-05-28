@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Sparkles, ArrowRight, ChevronRight, Check, Copy, Terminal, Zap,
 } from "lucide-react";
