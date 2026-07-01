@@ -16,6 +16,7 @@ import {
   uploadDocument,
   type UserBrandSummary,
 } from "../../services/ai/documentsService";
+import { formatErrorMessage } from "../../services/apiError";
 
 const SOCIALS: { label: string; value: SocialPlatform }[] = [
   { label: "LinkedIn", value: "linkedin" },
@@ -259,7 +260,7 @@ function BriefForm({ onGenerate }: { onGenerate: (d: BriefData) => void }) {
         // Clean the URL so a refresh doesn't re-fetch.
         window.history.replaceState({}, "", "/home");
       } catch (err) {
-        setPrefill({ kind: "error", text: (err as Error).message || "Couldn't load original brief" });
+        setPrefill({ kind: "error", text: formatErrorMessage(err, "Couldn't load original brief") });
       }
     })();
   }, []);
@@ -337,7 +338,7 @@ function BriefForm({ onGenerate }: { onGenerate: (d: BriefData) => void }) {
         setAttachMsg({ kind: "err", text: result.error || "Upload failed" });
       }
     } catch (err) {
-      setAttachMsg({ kind: "err", text: (err as Error).message || "Upload failed" });
+      setAttachMsg({ kind: "err", text: formatErrorMessage(err, "Upload failed") });
     } finally {
       setAttachUploading(false);
     }
@@ -863,7 +864,7 @@ function RecentSidebar() {
           setItems(rows.filter((r) => r.status === "success").slice(0, 4));
         }
       } catch (err) {
-        if (!cancelled) setError((err as Error).message || "Couldn't load");
+        if (!cancelled) setError(formatErrorMessage(err, "Couldn't load"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -981,7 +982,7 @@ function BrandsSidebar() {
         });
         if (!cancelled) setBrands(sorted.slice(0, 4));
       } catch (err) {
-        if (!cancelled) setError((err as Error).message || "Couldn't load");
+        if (!cancelled) setError(formatErrorMessage(err, "Couldn't load"));
       } finally {
         if (!cancelled) setLoading(false);
       }

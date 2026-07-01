@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import VerifyEmail from "../PagesUi/VerifyEmail";
 import { verifyEmail, resendVerification } from "../../../../services/auth/verificationService";
 import { navigateTo } from "../../../../services/auth/authHelpers";
+import { formatErrorMessage } from "../../../../services/apiError";
 import { useAuth } from "../../../../context/AuthContext";
 
 const VerifyEmailLogic = () => {
@@ -42,7 +43,7 @@ const VerifyEmailLogic = () => {
       const result = await verifyEmail(token);
       if (!result.ok) {
         setStatus("error");
-        setMessage(result.error?.message || "We couldn't verify this link. It may have expired.");
+        setMessage(formatErrorMessage(result.error, "We couldn't verify this link. It may have expired."));
         return;
       }
 
@@ -74,7 +75,7 @@ const VerifyEmailLogic = () => {
       setResendMessage(result.message || "Verification email sent. Check your inbox.");
     } else {
       setResendStatus("error");
-      setResendMessage(result.error?.message || "Could not resend verification email.");
+      setResendMessage(formatErrorMessage(result.error, "Could not resend verification email."));
     }
   };
 

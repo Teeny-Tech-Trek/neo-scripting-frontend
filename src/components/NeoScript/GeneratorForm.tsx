@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Check, Loader2, ArrowDown } from "lucide-react";
 import type { BriefData } from "./pages/Home";
 import { aiFetchRaw } from "../../services/ai/aiClient";
+import { normalizeApiError, formatErrorMessage } from "../../services/apiError";
 import { useCredits } from "../../context/CreditsContext";
 
 /** Error variant — used to switch the inline error card into "out of credits" UX. */
@@ -184,22 +185,43 @@ export default function GeneratorForm({ brief, onDone }: Props) {
         // the inline error card switches into a "top up" / "upgrade" call-to-action.
         if (response.status === 402 || response.status === 403) {
           const payload = await response.json().catch(() => null);
-          const code = (payload?.detail?.code ?? payload?.code) as string | undefined;
-          const message =
-            (payload?.detail?.message as string | undefined) ||
-            (typeof payload?.detail === "string" ? payload.detail : null) ||
-            (response.status === 402
-              ? "You're out of credits. Top up to keep generating."
-              : "This action requires a higher plan.");
+          const normalized = normalizeApiError(payload, response.status, {
+            retryAfterHeader: response.headers.get("Retry-After"),
+            fallbackMessage:
+              response.status === 402
+                ? "You're out of credits. Top up to keep generating."
+                : "This action requires a higher plan.",
+          });
+          // A 403 isn't always a plan gate — an unverified user gets one too.
+          // Route them to the verify-email prompt rather than the upgrade CTA.
+          if (normalized.code === "EMAIL_NOT_VERIFIED") {
+            navigateTo("/verify-email");
+            return;
+          }
           // Bring the navbar pill in sync (server may have refunded if it
           // pre-deducted then bailed; either way the truth is now refetched).
           credits.refresh();
           if (mounted) {
-            if (code === "INSUFFICIENT_CREDITS" || response.status === 402) {
+            const message = formatErrorMessage(normalized);
+            if (normalized.code === "INSUFFICIENT_CREDITS" || response.status === 402) {
               setError({ kind: "insufficient_credits", message });
             } else {
               setError({ kind: "plan_gated", message });
             }
+          }
+          return;
+        }
+
+        // 429 RATE_LIMITED / IP_RATE_LIMITED — show a retry message; the
+        // backend also sends a Retry-After header we surface to the user.
+        if (response.status === 429) {
+          const payload = await response.json().catch(() => null);
+          const normalized = normalizeApiError(payload, 429, {
+            retryAfterHeader: response.headers.get("Retry-After"),
+            fallbackMessage: "You're sending requests too fast. Please wait a moment and try again.",
+          });
+          if (mounted) {
+            setError({ kind: "generic", message: formatErrorMessage(normalized) });
           }
           return;
         }

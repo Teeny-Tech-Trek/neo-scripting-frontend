@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import ResetPassword from "../PagesUi/ResetPassword";
 import { resetPassword } from "../../../../services/auth/resetPasswordService";
 import { navigateTo } from "../../../../services/auth/authHelpers";
+import { formatErrorMessage } from "../../../../services/apiError";
 
 const ResetPasswordLogic = () => {
   const [token, setToken] = useState<string | null>(null);
@@ -47,7 +48,7 @@ const ResetPasswordLogic = () => {
       setTimeout(() => navigateTo("/login"), 1800);
     } else {
       setStatus("error");
-      setMessage(result.error?.message || "Could not reset password.");
+      setMessage(formatErrorMessage(result.error, "Could not reset password."));
     }
   };
 

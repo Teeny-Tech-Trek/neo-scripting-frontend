@@ -51,6 +51,17 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     const status = error?.response?.status;
 
+    // 403 EMAIL_NOT_VERIFIED: the user is authenticated but hasn't verified
+    // their email. Route them to the verify-email prompt. (401 NO_TOKEN /
+    // INVALID_TOKEN is handled by the refresh-then-retry flow below.)
+    if (status === 403) {
+      const data = error?.response?.data;
+      const code = data?.code ?? data?.detail?.code;
+      if (code === "EMAIL_NOT_VERIFIED" && window.location.pathname !== "/verify-email") {
+        navigateTo("/verify-email");
+      }
+    }
+
     if (
       status !== 401 ||
       !originalRequest ||

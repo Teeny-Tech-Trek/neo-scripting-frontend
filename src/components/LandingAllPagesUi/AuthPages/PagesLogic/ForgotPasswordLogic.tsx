@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import ForgotPassword from "../PagesUi/ForgotPassword";
 import { forgotPassword } from "../../../../services/auth/forgotPasswordService";
 import { navigateTo } from "../../../../services/auth/authHelpers";
+import { formatErrorMessage } from "../../../../services/apiError";
 
 const ForgotPasswordLogic = () => {
   const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ const ForgotPasswordLogic = () => {
       setMessage(result.message || "If that email exists, a reset link has been sent.");
     } else {
       setStatus("error");
-      setMessage(result.error?.message || "Could not send reset email. Try again.");
+      setMessage(formatErrorMessage(result.error, "Could not send reset email. Try again."));
     }
   };
 

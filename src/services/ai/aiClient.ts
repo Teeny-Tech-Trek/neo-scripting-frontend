@@ -13,6 +13,7 @@
 import { getToken } from "../auth/authHelpers";
 import { refreshAccessToken } from "../auth/refreshService";
 import { logoutUser, navigateTo } from "../auth/authHelpers";
+import { normalizeApiError, type NormalizedApiError } from "../apiError";
 
 export const AI_API_URL =
   (import.meta.env.VITE_AI_API_URL as string | undefined) ||
@@ -22,10 +23,33 @@ export const AI_API_URL =
 export class ApiError extends Error {
   status: number;
   code?: string;
-  constructor(message: string, status: number, code?: string) {
+  requestId: string | null;
+  retryAfter: number | null;
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    opts?: { requestId?: string | null; retryAfter?: number | null },
+  ) {
     super(message);
+    this.name = "ApiError";
     this.status = status;
     this.code = code;
+    this.requestId = opts?.requestId ?? null;
+    this.retryAfter = opts?.retryAfter ?? null;
+  }
+}
+
+// Side effects shared by every AI error path: a verified-only endpoint that
+// rejects an unverified-but-logged-in user routes them to the verify-email
+// prompt instead of surfacing a raw error.
+export function handleApiErrorSideEffects(e: NormalizedApiError): void {
+  if (
+    e.status === 403 &&
+    e.code === "EMAIL_NOT_VERIFIED" &&
+    window.location.pathname !== "/verify-email"
+  ) {
+    navigateTo("/verify-email");
   }
 }
 
@@ -91,14 +115,14 @@ export async function aiFetch<T>(path: string, init: RequestInitNoBody = {}): Pr
   const payload = isJson ? await res.json().catch(() => null) : await res.text();
 
   if (!res.ok) {
-    const detail = isJson && payload && typeof payload === "object" ? payload : null;
-    const code = detail?.detail?.code || detail?.code;
-    const message =
-      (detail?.detail?.message as string | undefined) ||
-      (detail?.detail as string | undefined) ||
-      (typeof payload === "string" ? payload : "") ||
-      `Request failed with status ${res.status}`;
-    throw new ApiError(message, res.status, code);
+    const normalized = normalizeApiError(payload, res.status, {
+      retryAfterHeader: res.headers.get("Retry-After"),
+    });
+    handleApiErrorSideEffects(normalized);
+    throw new ApiError(normalized.message, normalized.status, normalized.code, {
+      requestId: normalized.requestId,
+      retryAfter: normalized.retryAfter,
+    });
   }
 
   return payload as T;

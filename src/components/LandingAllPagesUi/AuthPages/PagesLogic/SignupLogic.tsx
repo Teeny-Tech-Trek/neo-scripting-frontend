@@ -5,6 +5,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import type { AuthActionResult } from "../../../../context/AuthContext";
 import { signInWithGoogle } from "../../../../services/auth/googleAuthService";
 import { navigateTo } from "../../../../services/auth/authHelpers";
+import { formatErrorMessage } from "../../../../services/apiError";
 
 export type SignupFormData = {
   firstName: string;
@@ -77,7 +78,7 @@ const SignupLogic = () => {
       setTimeout(() => navigateTo("/verify-email"), 800);
     } else {
       setSubmitStatus("error");
-      setErrorMessage(result.error?.message || "Signup failed. Please try again.");
+      setErrorMessage(formatErrorMessage(result.error, "Signup failed. Please try again."));
       setTimeout(() => setSubmitStatus("idle"), 3500);
     }
   };
@@ -98,7 +99,7 @@ const SignupLogic = () => {
         setTimeout(() => navigateTo(target), 600);
       } else {
         setSubmitStatus("error");
-        setErrorMessage(result.error?.message || "Google sign-in failed.");
+        setErrorMessage(formatErrorMessage(result.error, "Google sign-in failed."));
         setTimeout(() => setSubmitStatus("idle"), 3500);
       }
     });

@@ -7,6 +7,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { billingService, type UserPlanSnapshot } from "../services/ai/billingService";
+import { formatErrorMessage } from "../services/apiError";
 import { useAuth } from "./AuthContext";
 
 type CreditsValue = {
@@ -40,7 +41,7 @@ export function CreditsProvider({ children }: { children: ReactNode }) {
       const data = await billingService.getMyPlan();
       setSnap(data);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to load credits.";
+      const msg = formatErrorMessage(e, "Failed to load credits.");
       // Surface the actual reason in the browser console so the user can
       // see if it's a network/CORS/auth issue. The pill silently falls
       // back to "0 credits" otherwise — easy to miss.

@@ -1,6 +1,8 @@
 // Browser-only persistence + tiny navigation helper shared by all auth services.
 // localStorage is wrapped so private-browsing / quota errors never throw.
 
+import { normalizeApiError } from "../apiError";
+
 const TOKEN_KEY = "neo_access_token";
 const USER_KEY = "neo_auth_user";
 
@@ -61,12 +63,34 @@ export const navigateTo = (path) => {
 };
 
 export const extractApiError = (error) => {
-  const apiErr = error?.response?.data?.error;
-  if (apiErr?.message) {
-    return { message: apiErr.message, code: apiErr.code || "UNKNOWN" };
+  const response = error?.response;
+  if (response) {
+    // axios lowercases response header keys.
+    const retryAfterHeader =
+      response.headers?.["retry-after"] ?? response.headers?.["Retry-After"] ?? null;
+    const n = normalizeApiError(response.data, response.status, { retryAfterHeader });
+    return {
+      message: n.message,
+      code: n.code,
+      requestId: n.requestId,
+      status: n.status,
+      retryAfter: n.retryAfter,
+    };
   }
   if (error?.message === "Network Error") {
-    return { message: "Cannot reach server. Check your connection.", code: "NETWORK_ERROR" };
+    return {
+      message: "Cannot reach server. Check your connection.",
+      code: "NETWORK_ERROR",
+      requestId: null,
+      status: 0,
+      retryAfter: null,
+    };
   }
-  return { message: error?.message || "Something went wrong", code: "UNKNOWN" };
+  return {
+    message: error?.message || "Something went wrong",
+    code: "UNKNOWN_ERROR",
+    requestId: null,
+    status: 0,
+    retryAfter: null,
+  };
 };

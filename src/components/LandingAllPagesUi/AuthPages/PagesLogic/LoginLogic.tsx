@@ -5,6 +5,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import type { AuthActionResult } from "../../../../context/AuthContext";
 import { signInWithGoogle } from "../../../../services/auth/googleAuthService";
 import { navigateTo } from "../../../../services/auth/authHelpers";
+import { formatErrorMessage } from "../../../../services/apiError";
 
 const LoginLogic = () => {
   const { login, applyAuthResult } = useAuth();
@@ -40,7 +41,7 @@ const LoginLogic = () => {
       const target = result.user?.isEmailVerified ? "/home" : "/verify-email";
       navigateTo(target);
     } else {
-      setErrorMessage(result.error?.message || "Login failed. Please try again.");
+      setErrorMessage(formatErrorMessage(result.error, "Login failed. Please try again."));
     }
   };
 
@@ -55,7 +56,7 @@ const LoginLogic = () => {
         const target = result.user?.isEmailVerified ? "/home" : "/verify-email";
         navigateTo(target);
       } else {
-        setErrorMessage(result.error?.message || "Google sign-in failed.");
+        setErrorMessage(formatErrorMessage(result.error, "Google sign-in failed."));
       }
     });
   };

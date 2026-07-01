@@ -16,7 +16,7 @@ import { USER_DOC_PALETTE } from "../MarkdownViewer";
 const STORAGE_KEY = "neo_script_last_result";
 
 type GenerateResult = {
-  blog_markdown?: string;
+  article_markdown?: string;
   social_posts?: Record<string, string>;
   citations?: Citation[];
   // Per-platform citation lists for the social previews. Same shape as
@@ -115,7 +115,7 @@ export default function Result() {
         try {
           const detail = await getGeneration(reqId);
           const hydrated: GenerateResult = {
-            blog_markdown: detail.blog_markdown ?? "",
+            article_markdown: detail.article_markdown ?? "",
             social_posts: detail.social_posts || {},
             citations: detail.citations || [],
             social_citations: detail.social_citations || {},
@@ -131,23 +131,44 @@ export default function Result() {
     }
 
     // 2. Fresh generation pushed state via navigateTo("/result", data).
-    const navState = window.history.state as GenerateResult | null;
-    if (navState && typeof navState === "object" && "blog_markdown" in navState) {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(navState));
-      setResult(navState);
+    //    Tolerate the legacy `blog_markdown` key on any state pushed before the
+    //    rename by coercing it onto the canonical `article_markdown`.
+    const navState = window.history.state as
+      | (GenerateResult & { blog_markdown?: string })
+      | null;
+    if (
+      navState &&
+      typeof navState === "object" &&
+      ("article_markdown" in navState || "blog_markdown" in navState)
+    ) {
+      const normalized: GenerateResult = {
+        ...navState,
+        article_markdown:
+          navState.article_markdown ?? navState.blog_markdown ?? "",
+      };
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+      setResult(normalized);
       return;
     }
+
+    // Coerce any object stored before the rename (legacy `blog_markdown` key)
+    // onto the canonical `article_markdown` so a session straddling a deploy
+    // still renders the blog output.
+    const coerce = (raw: string): GenerateResult => {
+      const obj = JSON.parse(raw) as GenerateResult & { blog_markdown?: string };
+      return { ...obj, article_markdown: obj.article_markdown ?? obj.blog_markdown ?? "" };
+    };
 
     // 3. Refresh / direct navigation: replay last successful generation.
     const session = sessionStorage.getItem(STORAGE_KEY);
     if (session) {
-      try { setResult(JSON.parse(session)); return; }
+      try { setResult(coerce(session)); return; }
       catch { sessionStorage.removeItem(STORAGE_KEY); }
     }
     const legacy = localStorage.getItem("neo_script_result");
     if (legacy) {
       try {
-        const parsed = JSON.parse(legacy) as GenerateResult;
+        const parsed = coerce(legacy);
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
         setResult(parsed);
         return;
@@ -156,9 +177,9 @@ export default function Result() {
   }, []);
 
   const handleCopyMarkdown = async () => {
-    if (!result?.blog_markdown) return;
+    if (!result?.article_markdown) return;
     try {
-      await navigator.clipboard.writeText(result.blog_markdown);
+      await navigator.clipboard.writeText(result.article_markdown);
       setMdCopied(true);
       setTimeout(() => setMdCopied(false), 2000);
     } catch { /* ignore */ }
@@ -178,7 +199,7 @@ export default function Result() {
   // the platform. Auto-switch to whichever platform actually has content.
   useEffect(() => {
     if (!result) return;
-    const hasBlog = Boolean(result.blog_markdown && result.blog_markdown.trim());
+    const hasBlog = Boolean(result.article_markdown && result.article_markdown.trim());
     if (hasBlog) return;  // blog generation: keep article tab
     const populated = Object.entries(result.social_posts ?? {})
       .find(([, body]) => Boolean(body && body.trim()));
@@ -214,9 +235,9 @@ export default function Result() {
 
   /* Download .md */
   const handleDownloadMd = () => {
-    if (!result?.blog_markdown) return;
-    const title = extractTitle(result.blog_markdown);
-    const blob  = new Blob([result.blog_markdown], { type: "text/markdown" });
+    if (!result?.article_markdown) return;
+    const title = extractTitle(result.article_markdown);
+    const blob  = new Blob([result.article_markdown], { type: "text/markdown" });
     const url   = URL.createObjectURL(blob);
     const a     = document.createElement("a");
     a.href = url; a.download = `${title}.md`; a.click();
@@ -247,7 +268,7 @@ export default function Result() {
     (p) => socialPosts[p] && socialPosts[p].trim()
   );
 
-  const md        = result.blog_markdown ?? "";
+  const md        = result.article_markdown ?? "";
   const title     = extractTitle(md);
   const wordCount = getWordCount(md);
   const readTime  = getReadTime(wordCount);
@@ -444,7 +465,7 @@ export default function Result() {
               onMouseUp={e => { e.stopPropagation(); /* allow handleMouseUp to fire */ }}
             >
               <MarkdownViewer
-                content={result.blog_markdown ?? ""}
+                content={result.article_markdown ?? ""}
                 citations={result.citations ?? []}
               />
             </div>

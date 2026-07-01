@@ -14,6 +14,7 @@ import {
   type UserBrandSummary,
   type UserDocument,
 } from "../../../services/ai/documentsService";
+import { formatErrorMessage } from "../../../services/apiError";
 
 const BRAND_KEY = "neo_docs_last_brand";
 const ACCEPTED = ".md,.txt,.pdf,.docx";
@@ -79,7 +80,7 @@ export default function Documents() {
       // most-recent one as the default selection.
       setActiveBrand((current) => current || rows[0]?.brand_name || "");
     } catch (err) {
-      setBrandsError((err as Error).message || "Couldn't load brands");
+      setBrandsError(formatErrorMessage(err, "Couldn't load brands"));
     } finally {
       setBrandsLoad(false);
     }
@@ -96,7 +97,7 @@ export default function Documents() {
       const rows = await listDocuments(brand);
       setItems(rows);
     } catch (err) {
-      setListError((err as Error).message || "Failed to load documents");
+      setListError(formatErrorMessage(err, "Failed to load documents"));
     } finally {
       setLoading(false);
     }
@@ -178,7 +179,7 @@ export default function Documents() {
       setActiveBrand(uploadTargetBrand);
       setNewBrand("");
     } catch (err) {
-      setUploadMsg({ kind: "err", text: (err as Error).message || "Upload failed" });
+      setUploadMsg({ kind: "err", text: formatErrorMessage(err, "Upload failed") });
     } finally {
       setUploading(false);
     }
@@ -192,7 +193,7 @@ export default function Documents() {
       // If this was the last doc for the brand, the sidebar count should refresh.
       loadBrands();
     } catch (err) {
-      setListError((err as Error).message || "Delete failed");
+      setListError(formatErrorMessage(err, "Delete failed"));
     }
   };
 

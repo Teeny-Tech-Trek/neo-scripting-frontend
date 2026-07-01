@@ -9,6 +9,7 @@ import {
   deleteGeneration,
   type GenerationHistoryItem,
 } from "../../../services/ai/generationsService";
+import { formatErrorMessage } from "../../../services/apiError";
 
 const navigateTo = (path: string) => {
   window.history.pushState({}, "", path);
@@ -66,7 +67,7 @@ export default function History() {
       const rows = await listGenerations(50);
       setItems(rows);
     } catch (err) {
-      setError((err as Error).message || "Failed to load history");
+      setError(formatErrorMessage(err, "Failed to load history"));
     } finally {
       setLoad(false);
     }
@@ -90,7 +91,7 @@ export default function History() {
       await deleteGeneration(it.request_id);
       setItems((prev) => prev.filter((x) => x.request_id !== it.request_id));
     } catch (err) {
-      setError((err as Error).message || "Delete failed");
+      setError(formatErrorMessage(err, "Delete failed"));
     } finally {
       setBusyId(null);
     }

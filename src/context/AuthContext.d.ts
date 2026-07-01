@@ -14,6 +14,9 @@ export type AuthUser = {
 export type AuthError = {
   message: string;
   code: string;
+  requestId?: string | null;
+  status?: number;
+  retryAfter?: number | null;
 };
 
 export type AuthActionResult = {

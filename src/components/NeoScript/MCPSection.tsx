@@ -8,6 +8,7 @@ import {
 } from "../../services/ai/mcpService";
 import ApiKeysPanel from "./ApiKeysPanel";
 import type { ApiKey } from "../../services/ai/apiKeysService";
+import { formatErrorMessage } from "../../services/apiError";
 
 // MCP server URL. Falls back to localhost when no deployment URL is provided
 // at build time — set VITE_MCP_URL in the frontend env once the MCP server
@@ -136,7 +137,7 @@ export default function MCPSection() {
           setUsageError(null);
         }
       } catch (err) {
-        if (!cancelled) setUsageError((err as Error).message || "Failed to load usage");
+        if (!cancelled) setUsageError(formatErrorMessage(err, "Failed to load usage"));
       } finally {
         if (!cancelled) setUsageLoading(false);
       }

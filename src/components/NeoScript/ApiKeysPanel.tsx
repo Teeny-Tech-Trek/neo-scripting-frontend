@@ -6,6 +6,7 @@ import {
   listApiKeys, createApiKey, revokeApiKey,
   type ApiKey, type ApiKeyCreated,
 } from "../../services/ai/apiKeysService";
+import { formatErrorMessage } from "../../services/apiError";
 
 /* ════════════════════════════════════════════════════════════════════════
    API KEYS PANEL — lives inside the MCP server tab.
@@ -55,7 +56,7 @@ export default function ApiKeysPanel({ onKeysChanged }: Props) {
       setKeys(rows);
       onKeysChanged?.(rows);
     } catch (err) {
-      setError((err as Error).message || "Couldn't load API keys");
+      setError(formatErrorMessage(err, "Couldn't load API keys"));
     } finally {
       setLoading(false);
     }
@@ -75,7 +76,7 @@ export default function ApiKeysPanel({ onKeysChanged }: Props) {
       setShowCreate(false);
       await load();                 // refresh list (now contains the new key, no secret)
     } catch (err) {
-      setError((err as Error).message || "Failed to create key");
+      setError(formatErrorMessage(err, "Failed to create key"));
     } finally {
       setCreating(false);
     }
@@ -88,7 +89,7 @@ export default function ApiKeysPanel({ onKeysChanged }: Props) {
       await revokeApiKey(k.id);
       await load();
     } catch (err) {
-      setError((err as Error).message || "Failed to revoke key");
+      setError(formatErrorMessage(err, "Failed to revoke key"));
     } finally {
       setRevoking(null);
     }

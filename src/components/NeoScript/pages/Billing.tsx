@@ -11,7 +11,7 @@ import {
   type BillingPlanOption,
   type UserPlanSnapshot,
 } from "../../../services/ai/billingService";
-import { ApiError } from "../../../services/ai/aiClient";
+import { formatErrorMessage } from "../../../services/apiError";
 import { useCredits } from "../../../context/CreditsContext";
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -136,8 +136,7 @@ export default function Billing() {
       setRazorpayKey(plansResp.razorpay_key_id);
       setUserPlan(planSnap);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to load billing data.";
-      setLoadError(msg);
+      setLoadError(formatErrorMessage(e, "Failed to load billing data."));
     } finally {
       setLoading(false);
     }
@@ -204,8 +203,7 @@ export default function Billing() {
       const rzp = new window.Razorpay(opts);
       rzp.open();
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : (e instanceof Error ? e.message : "Purchase failed.");
-      setFlash({ kind: "err", msg });
+      setFlash({ kind: "err", msg: formatErrorMessage(e, "Purchase failed.") });
     } finally {
       setPurchasingId(null);
     }

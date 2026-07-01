@@ -29,7 +29,7 @@ export type CitationSourceKind = "user_doc" | "keyword" | "competitor" | "web";
 export type Citation = {
   start_offset: number;
   end_offset: number;
-  // The exact substring of blog_markdown that this citation covers — the
+  // The exact substring of article_markdown that this citation covers — the
   // MD viewer uses this for in-DOM substring matching.
   matched_text: string;
   source_kind: CitationSourceKind;
@@ -49,9 +49,13 @@ export type GenerationDetail = {
   company_url: string;
   prompt: string;
   platforms: string[];
-  blog_markdown: string | null;
-  blog_title: string | null;
-  blog_word_count: number | null;
+  article_markdown: string | null;
+  article_title: string | null;
+  article_word_count: number | null;
+  // DEPRECATED aliases still sent by the backend during the rename transition.
+  blog_markdown?: string | null;
+  blog_title?: string | null;
+  blog_word_count?: number | null;
   social_posts: Record<string, string>;
   citations: Citation[];
   // Per-platform citations for the social post previews.
