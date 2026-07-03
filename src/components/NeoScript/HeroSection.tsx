@@ -76,10 +76,10 @@ export default function HeroSection({ view, setView, onGenerate }: Props) {
         />
       </div>
 
-      <div className="relative max-w-[1180px] mx-auto">
+      <div className="relative max-w-[1180px] mx-auto" id="tour-welcome-hero">
         {/* ─── View toggle (centered) ─── */}
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-0.5 bg-white/[0.03] border border-white/[0.06] rounded-full p-1">
+          <div className="flex items-center gap-0.5 bg-white/[0.03] border border-white/[0.06] rounded-full p-1" id="tour-view-toggle">
             <button
               onClick={() => setView("web")}
               className={[
@@ -423,12 +423,13 @@ function BriefForm({ onGenerate }: { onGenerate: (d: BriefData) => void }) {
         </p>
         <input
           value={topic}
+          id="tour-brief-topic"
           onChange={(e) => setTopic(e.target.value)}
           placeholder="e.g. How AI is transforming logistics operations in 2025"
           className="w-full bg-transparent border border-violet-500/60 rounded-xl px-4 py-3.5 text-[15px] font-medium text-white placeholder:text-white/30 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/20 transition-all mb-7"
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-7" id="tour-brief-brand-url">
           <div>
             <p className="text-[13px] font-medium text-white/70 mb-2.5">
               Brand
@@ -459,7 +460,7 @@ function BriefForm({ onGenerate }: { onGenerate: (d: BriefData) => void }) {
         <p className="text-[13px] font-medium text-white/70 mb-2.5">
           What do you want to generate?
         </p>
-        <div className="flex flex-wrap gap-2 mb-5">
+        <div className="flex flex-wrap gap-2 mb-5" id="tour-brief-format">
           {(["blog", "social"] as GenerationMode[]).map((m) => (
             <button
               key={m}
@@ -555,7 +556,7 @@ function BriefForm({ onGenerate }: { onGenerate: (d: BriefData) => void }) {
         </button>
 
         {/* ─── Advanced options (collapsible) ─── */}
-        <div className="pb-7 border-b border-white/[0.06]">
+        <div className="pb-7 border-b border-white/[0.06]" id="tour-advanced-toggle">
           <button
             type="button"
             onClick={() => setAdvancedOpen((v) => !v)}
@@ -811,6 +812,7 @@ function BriefForm({ onGenerate }: { onGenerate: (d: BriefData) => void }) {
           <button
             onClick={handleSubmit}
             disabled={disabled}
+            id="tour-run-btn"
             className={[
               "flex-1 group font-semibold text-[15px] py-3.5 px-6 rounded-xl transition-all duration-200",
               disabled
@@ -881,6 +883,7 @@ function RecentSidebar() {
     <div
       className="rounded-2xl border border-white/[0.06] p-5"
       style={{ background: "rgba(255,255,255,0.015)" }}
+      id="tour-sidebar-history"
     >
       <div className="flex items-center justify-between mb-4">
         <button
@@ -994,6 +997,7 @@ function BrandsSidebar() {
     <div
       className="rounded-2xl border border-white/[0.06] p-5"
       style={{ background: "rgba(255,255,255,0.015)" }}
+      id="tour-sidebar-docs"
     >
       <div className="flex items-center justify-between mb-4">
         <button

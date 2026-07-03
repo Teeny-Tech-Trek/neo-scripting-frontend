@@ -3,6 +3,7 @@ import Navbar from "../Navbar";
 import HeroSection from "../HeroSection";
 import GeneratorForm from "../GeneratorForm";
 import Footer from "../Footer";
+import ProductTour from "../../ProductTour/ProductTour";
 
 export type ViewMode = "web" | "mcp";
 
@@ -62,6 +63,7 @@ export default function Home() {
             don't render <MCPSection /> here separately. */}
       </main>
       <Footer />
+      {!brief && <ProductTour />}
     </div>
   );
 }

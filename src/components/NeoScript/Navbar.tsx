@@ -158,7 +158,7 @@ export default function Navbar() {
         </a>
 
         {/* ─── RIGHT NAV ─────────────────────────────────────────────── */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5" id="tour-user-menu">
           {/* Nav links removed — History + Documents now live in the
               home page's left sidebar with See-all CTAs. */}
 
