@@ -3,6 +3,7 @@ import { Check, Copy, Activity, Loader2, AlertTriangle, History } from "lucide-r
 import {
   getMcpUsage,
   getMcpServerStatus,
+  mcpBaseUrl,
   type McpUsage,
   type McpServerStatus,
 } from "../../services/ai/mcpService";
@@ -11,11 +12,18 @@ import type { ApiKey } from "../../services/ai/apiKeysService";
 import { formatErrorMessage } from "../../services/apiError";
 
 // MCP server URL. Falls back to localhost when no deployment URL is provided
-// at build time — set VITE_MCP_URL in the frontend env once the MCP server
-// has a live URL again (Render, Railway, Fly, wherever you redeploy).
-const MCP_URL =
+// at build time — set VITE_MCP_URL in the frontend env.
+//
+// VITE_MCP_URL may still carry the legacy "/sse" suffix, so we normalize to
+// the origin and rebuild the streamable-HTTP URL from it. That way flipping
+// the env var is optional, not a prerequisite for this panel being correct.
+const MCP_URL_RAW =
   (import.meta.env.VITE_MCP_URL as string | undefined) ||
-  "http://localhost:8080/sse";
+  "http://localhost:8080/mcp";
+
+const MCP_BASE = mcpBaseUrl(MCP_URL_RAW);
+/** Streamable HTTP — what every client should use. */
+const MCP_URL = `${MCP_BASE}/mcp`;
 
 const EXAMPLE_PROMPTS = [
   "Script a long-form piece on AI in logistics for my brand",
@@ -39,7 +47,7 @@ const AVAILABLE_TOOLS = [
 
 const CLIENT_FILENAMES: Record<string, string> = {
   "Claude Desktop": "claude_desktop_config.json",
-  "Claude Code": "~/.claude/config.json",
+  "Claude Code": "terminal",
   Cursor: ".cursor/mcp.json",
   Windsurf: "windsurf.config.json",
 };
@@ -197,52 +205,26 @@ export default function MCPSection() {
   };
 
   // ── Per-client config snippet ─────────────────────────────────────────────
-  // Claude Desktop + Claude Code only support STDIO MCP servers in their
-  // config file — they spawn a local command and talk over stdin/stdout.
-  // We use the `mcp-remote` bridge to turn our remote SSE endpoint into a
-  // local stdio server those clients can launch. Cursor and Windsurf both
-  // accept a direct SSE URL config, so we emit the simpler shape there.
+  // We serve streamable HTTP at /mcp, which every current client speaks
+  // natively — so no `mcp-remote` stdio bridge, no Node.js requirement, and
+  // no Windows `C:\Program Files` quoting workaround.
   //
-  // Windows quirk: on Windows, Claude Desktop wraps the command in
-  // `cmd.exe /C ...`. If we use "command": "npx", Claude resolves it to
-  // `C:\Program Files\nodejs\npx.cmd` — the space in "Program Files"
-  // then breaks cmd.exe's argument parsing. Workaround: use "command": "cmd"
-  // and let cmd resolve npx itself via PATH.
+  // Dropping the bridge is the actual fix for the hang users hit: mcp-remote
+  // re-opened a dropped SSE stream without re-running `initialize`, then kept
+  // posting against a session the server had never handshaked. Streamable HTTP
+  // answers an unknown session with 404, which clients handle by re-initializing.
   const bearerToken = activeKeyPrefix ? `${activeKeyPrefix}…` : "<your-api-key>";
-  const needsBridge = client === "Claude Desktop" || client === "Claude Code";
-  const isWindows =
-    typeof navigator !== "undefined" &&
-    /win/i.test(navigator.platform || navigator.userAgent || "");
 
-  const bridgeBaseArgs = [
-    "-y",
-    "mcp-remote",
-    MCP_URL,
-    "--header",
-    `Authorization: Bearer ${bearerToken}`,
-  ];
+  const httpEntry = {
+    type: "http",
+    url: MCP_URL,
+    headers: { Authorization: `Bearer ${bearerToken}` },
+  };
 
-  const bridgeEntry = isWindows
-    ? { command: "cmd", args: ["/c", "npx", ...bridgeBaseArgs] }
-    : { command: "npx", args: bridgeBaseArgs };
-
-  const configSnippet = needsBridge
-    ? JSON.stringify({ mcpServers: { "neo-script": bridgeEntry } }, null, 2)
-    : JSON.stringify(
-        {
-          mcpServers: {
-            "neo-script": {
-              type: "sse",
-              url: MCP_URL,
-              headers: {
-                Authorization: `Bearer ${bearerToken}`,
-              },
-            },
-          },
-        },
-        null,
-        2,
-      );
+  const configSnippet =
+    client === "Claude Code"
+      ? `claude mcp add --transport http neo-script ${MCP_URL} \\\n  --header "Authorization: Bearer ${bearerToken}"`
+      : JSON.stringify({ mcpServers: { "neo-script": httpEntry } }, null, 2);
 
   const [snippetCopied, setSnippetCopied] = useState(false);
   const handleCopySnippet = async () => {
@@ -370,16 +352,15 @@ export default function MCPSection() {
           <pre className="px-5 py-4 text-[13px] font-mono leading-relaxed overflow-x-auto text-white/85">
             <code>{configSnippet}</code>
           </pre>
-          {needsBridge && (
-            <div className="px-5 py-2.5 border-t border-white/[0.06] text-[11.5px] text-white/55 bg-white/[0.02] leading-relaxed">
-              {client} only launches MCP servers as local commands, so we wrap
-              the remote endpoint with{" "}
-              <code className="font-mono text-violet-300">mcp-remote</code> (an
-              npm bridge that proxies stdio ↔ SSE). Requires Node.js installed
-              on your machine — <code className="font-mono text-violet-300">npx</code>{" "}
-              fetches the bridge on first launch.
-            </div>
-          )}
+          <div className="px-5 py-2.5 border-t border-white/[0.06] text-[11.5px] text-white/55 bg-white/[0.02] leading-relaxed">
+            Connects over{" "}
+            <code className="font-mono text-violet-300">streamable HTTP</code> —
+            no <code className="font-mono text-violet-300">mcp-remote</code>{" "}
+            bridge and no Node.js needed. If you previously used the{" "}
+            <code className="font-mono text-violet-300">/sse</code> config,
+            replace it with this one and fully quit {client} (tray icon, not
+            just the window) so the old bridge process exits.
+          </div>
           {!activeKeyPrefix ? (
             <div className="px-5 py-2.5 border-t border-white/[0.06] text-[11.5px] text-amber-300/85 bg-amber-500/[0.04]">
               ⚠ Mint an API key above first — replace{" "}

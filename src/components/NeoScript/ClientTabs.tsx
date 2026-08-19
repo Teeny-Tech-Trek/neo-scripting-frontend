@@ -1,5 +1,6 @@
 import { useState } from "react";
 import CodeBlock from "./CodeBlock";
+import { mcpBaseUrl } from "../../services/ai/mcpService";
 
 type Client = {
   id: string;
@@ -8,6 +9,20 @@ type Client = {
   language: string;
   code: string;
 };
+
+// Streamable HTTP endpoint, derived from the same env var MCPSection uses so
+// these snippets can never drift to a stale host again. VITE_MCP_URL may still
+// carry the legacy "/sse" suffix; mcpBaseUrl strips it.
+const MCP_URL = `${mcpBaseUrl(
+  (import.meta.env.VITE_MCP_URL as string | undefined) ||
+    "http://localhost:8080/mcp",
+)}/mcp`;
+
+// These snippets omit the Authorization header because the server requires a
+// personal API key the user has to mint first — the signed-in panel
+// (MCPSection) injects their real key prefix. Keep the placeholder explicit so
+// nobody copies a config that silently 401s.
+const AUTH_NOTE = `"Authorization": "Bearer <your-api-key>"`;
 
 const CLIENTS: Client[] = [
   {
@@ -18,8 +33,11 @@ const CLIENTS: Client[] = [
     code: `{
   "mcpServers": {
     "neo-script": {
-      "type": "sse",
-      "url": "https://neo-script-mcp.onrender.com/sse"
+      "type": "http",
+      "url": "${MCP_URL}",
+      "headers": {
+        ${AUTH_NOTE}
+      }
     }
   }
 }`,
@@ -29,7 +47,8 @@ const CLIENTS: Client[] = [
     label: "Claude Code",
     description: "Run this command in your terminal",
     language: "shell",
-    code: `claude mcp add neo-script --transport sse https://neo-script-mcp.onrender.com/sse`,
+    code: `claude mcp add --transport http neo-script ${MCP_URL} \\
+  --header "Authorization: Bearer <your-api-key>"`,
   },
   {
     id: "cursor",
@@ -39,8 +58,11 @@ const CLIENTS: Client[] = [
     code: `{
   "mcpServers": {
     "neo-script": {
-      "url": "https://neo-script-mcp.onrender.com/sse",
-      "type": "sse"
+      "type": "http",
+      "url": "${MCP_URL}",
+      "headers": {
+        ${AUTH_NOTE}
+      }
     }
   }
 }`,
@@ -53,7 +75,10 @@ const CLIENTS: Client[] = [
     code: `{
   "mcpServers": {
     "neo-script": {
-      "serverUrl": "https://neo-script-mcp.onrender.com/sse"
+      "serverUrl": "${MCP_URL}",
+      "headers": {
+        ${AUTH_NOTE}
+      }
     }
   }
 }`,
